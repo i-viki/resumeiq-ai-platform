@@ -1,5 +1,15 @@
 # ResumeIQ – AI-Powered Resume Analysis & ATS Intelligence Platform
 
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://adoptium.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.0-6DB33F?style=flat&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4.5-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4.4-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-6.4.2-646CFF?style=flat&logo=vite)](https://vitejs.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat&logo=node.js)](https://nodejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Enterprise-grade resume analysis platform that evaluates resumes against job descriptions using **Google Gemini AI**, generating ATS compatibility scores, skill gap insights, and actionable improvement recommendations.
 
 ---
@@ -46,7 +56,7 @@ Enterprise-grade resume analysis platform that evaluates resumes against job des
 | React DOM | 18.3.1 |
 | React Router DOM | 6.23.1 |
 | TypeScript | 5.4.5 |
-| Vite | 5.2.13 |
+| Vite | 6.4.2 |
 | Tailwind CSS | 3.4.4 |
 | Axios | 1.7.2 |
 | Recharts | 2.12.7 |
