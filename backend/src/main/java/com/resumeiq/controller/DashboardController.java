@@ -9,7 +9,9 @@ import com.resumeiq.service.AtsScoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,7 +27,9 @@ public class DashboardController {
     private final AtsScoreService atsScoreService;
 
     @GetMapping("/stats")
+    @Transactional(readOnly = true)
     public ResponseEntity<DashboardDto> getStats(Authentication authentication) {
+
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
