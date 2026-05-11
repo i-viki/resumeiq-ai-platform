@@ -245,7 +245,7 @@ Navigate to **http://localhost:5173**, register an account, and start analyzing 
 ### application.yml Profiles
 
 - **`dev`** (default) – H2 in-memory DB, console enabled at `/h2-console`, auto DDL, built-in JWT secret
-- **`prod`** – PostgreSQL, schema validation, all secrets from environment variables
+- **`prod`** – PostgreSQL, automatic schema migration (`ddl-auto: update`), all secrets from environment variables.
 
 ---
 
@@ -302,17 +302,22 @@ The overall ATS score is a weighted combination:
 cp .env.example .env
 # Edit .env with your GEMINI_API_KEY, DB_PASSWORD, JWT_SECRET
 
-# Build and run all services
-docker compose up --build
+# Build and run all services (Multi-stage build, no local tools required)
+docker compose up --build -d
 ```
+
+> [!TIP]
+> Our Docker configuration includes automated fixes for Windows line endings (CRLF) and execution permissions for the Maven wrapper, ensuring a smooth deployment on any OS.
+
 
 ### Services
 
 | Service | Port | Description |
 |---|---|---|
 | `frontend` | 80 | Nginx serving React app |
-| `backend` | 8080 | Spring Boot API |
-| `db` | 5432 | PostgreSQL 16 |
+| `backend` | 8080 | Spring Boot API (Wait-for-DB ready) |
+| `db` | 5432 | PostgreSQL 16 (With Healthcheck) |
+
 
 ### Production Build
 
@@ -336,6 +341,16 @@ cd frontend && npm run build
 | `ADMIN` | Access `/api/admin/**` endpoints and Admin Dashboard UI |
 
 > **Note:** The backend contains an `AdminSeeder` that automatically provisions `admin@resumeiq.com` (password: `admin123`) on the first application boot.
+
+---
+
+## Troubleshooting
+
+### 1. "Unable to access lob stream" (PostgreSQL)
+If you encounter this error while accessing the dashboard, it is due to Hibernate trying to read large text fields outside of a transaction. We have resolved this by adding `@Transactional(readOnly = true)` to key controller methods. If you add new large text fields, ensure they are accessed within a transactional context.
+
+### 2. "mvnw: illegal option -"
+This is caused by Windows line endings (CRLF). Our `backend/Dockerfile` now automatically handles this using `sed -i 's/\r$//' mvnw`.
 
 ---
 
