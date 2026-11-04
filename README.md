@@ -185,7 +185,7 @@ resumeiq-ai-platform/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/resumeiq-ai-platform.git
+git clone https://github.com/i-viki/resumeiq-ai-platform.git
 cd resumeiq-ai-platform
 ```
 
