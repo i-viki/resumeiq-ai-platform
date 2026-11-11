@@ -186,7 +186,7 @@ $$S_{\text{overall}} = 0.45 \cdot S_{\text{skill}} + 0.20 \cdot S_{\text{exp}} +
 | `POST /api/auth/refresh` | Public | Silent background token renewal hitting timer 10s before expiry. |
 | `POST /api/resume/upload` | **Authenticated** | Uploads candidate resume PDF (multipart form-data). |
 | `POST /api/job/analyze` | **Authenticated** | Submits job description text for Gemini AI skill extraction. |
-| `POST /api/score/evaluate` | **Authenticated** | Triggers asynchronous ATS analysis (`@EnableAsync`) $\to$ returns `{ analysisId }`. |
+| `POST /api/score/evaluate` | **Authenticated** | Triggers asynchronous ATS analysis (`@EnableAsync`) → returns `{ analysisId }`. |
 | `GET /api/analysis/{id}` | **Authenticated** | Retrieves analysis score breakdown (poll until `COMPLETED`). |
 | `GET /api/dashboard/stats` | **Authenticated** | Retrieves aggregate user analytics and recent ATS evaluations. |
 | `GET /api/admin/users` | `ROLE_ADMIN` | Fleet user list and clearance roles. |
