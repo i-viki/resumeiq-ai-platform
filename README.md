@@ -85,6 +85,50 @@ flowchart TB
     ADMIN_CTRL --> DB
 ```
 
+### Monorepo Directory Organization
+
+```text
+resumeiq-ai-platform/
+├── backend/
+│   ├── pom.xml                          # Maven build descriptor
+│   ├── Dockerfile                       # Multi-stage Temurin 21 JRE container
+│   └── src/main/
+│       ├── java/com/resumeiq/
+│       │   ├── ResumeIqApplication.java # Bootstrap entry point (@EnableAsync)
+│       │   ├── config/
+│       │   │   ├── SecurityConfig.java  # JWT filter, CORS, RBAC
+│       │   │   └── AdminSeeder.java     # Default admin provisioning
+│       │   ├── controller/
+│       │   │   ├── AuthController.java       # /api/auth/* endpoints
+│       │   │   ├── ResumeController.java     # /api/resume/upload
+│       │   │   ├── JobController.java        # /api/job/analyze
+│       │   │   ├── AnalysisController.java   # /api/score/evaluate, /api/analysis/{id}
+│       │   │   ├── DashboardController.java  # /api/dashboard/stats
+│       │   │   └── AdminController.java      # /api/admin/* fleet endpoints
+│       │   ├── dto/                          # AuthDto, ResumeDto, JobDto, AnalysisDto
+│       │   ├── entity/                       # User, Resume, JobDescription, AnalysisResult, RefreshToken
+│       │   ├── exception/                    # GlobalExceptionHandler
+│       │   ├── repository/                   # Spring Data JPA repositories
+│       │   ├── security/                     # JwtTokenProvider, JwtAuthenticationFilter
+│       │   └── service/                      # AtsScoreService, ResumeParsingService, GeminiAiService
+│       └── resources/
+│           └── application.yml          # Multi-profile configuration (dev/prod)
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.ts                   # Vite configuration & proxy routes
+│   ├── tailwind.config.js               # Tailwind design system tokens
+│   ├── nginx.conf                       # Production SPA fallback routing
+│   └── src/
+│       ├── main.tsx                     # React DOM entry point
+│       ├── App.tsx                      # Route declarations
+│       ├── context/AuthContext.tsx      # Eager refresh token state engine
+│       ├── components/                  # Layout, ProtectedRoute, UI primitives
+│       ├── pages/                       # LoginPage, DashboardPage, UploadPage, AnalysisPage, AdminPage
+│       └── services/                    # Axios API client & endpoints
+├── docker-compose.yml                   # Production container orchestration
+└── .env.example                         # Environment secret template
+```
+
 ---
 
 ## ATS Scoring Weighted Matrix & Invariants
@@ -100,6 +144,54 @@ $$S_{\text{overall}} = 0.45 \cdot S_{\text{skill}} + 0.20 \cdot S_{\text{exp}} +
 | **Keyword Density** | `15%` | Frequency and context of core domain terminology | Inject industry keywords without keyword-stuffing |
 | **Resume Formatting** | `10%` | Section headers, typography, parse readability | Fix non-standard headers, tables, or columns |
 | **AI Fit Confidence** | `10%` | LLM holistic semantic reasoning score | Strengthen project narrative and deliverables |
+
+### User Roles & Clearance Matrix
+
+| Role | Access Level | Permissions |
+| :--- | :--- | :--- |
+| **`JOB_SEEKER`** | Default Persona | Upload personal resumes, trigger ATS scoring, view own analysis history. |
+| **`RECRUITER`** | Hiring Team | Bulk candidate ingestion, JD benchmarking, talent comparison. |
+| **`ENTERPRISE`** | Institutional Team | Enterprise API access, custom scoring weight configuration. |
+| **`ADMIN`** | Platform Superuser | Access `/api/admin/**` endpoints, manage user registry, view fleet analytics. |
+
+> The backend includes an `AdminSeeder` that provisions `admin@resumeiq.com` (password: `admin123`) on initial boot.
+
+---
+
+## Complete Technology Stack & Version Matrix
+
+| Tier | Dependency / Tool | Version | Operational Purpose |
+| :--- | :--- | :--- | :--- |
+| **Runtime** | Java LTS | `21` | Eclipse Temurin 21 JRE runtime |
+| **Backend** | Spring Boot | `3.3.0` | Core microservice framework |
+| **Security** | Spring Security / JJWT | `6.3.x` / `0.12.5` | Stateless JWT authentication and token rotation |
+| **Persistence** | Spring Data JPA / Hibernate | `3.3.x` | Relational persistence with EntityGraphs |
+| **PDF Extraction**| Apache PDFBox | `3.0.2` | Clean semantic PDF text and structure extraction |
+| **AI Inference**| Google Gemini API | `gemini-1.5-flash` | Contextual skill extraction and gap reasoning |
+| **Frontend UI** | React / TypeScript | `18.3.1` / `5.4.5` | High-craft dashboard and reactive state |
+| **Styling** | Tailwind CSS | `3.4.4` | Responsive dark/light styling |
+| **Bundler** | Vite | `6.4.2` | Fast HMR dev server and Rollup production builds |
+| **Visualization**| Recharts / Lucide | `2.12.7` / `0.378.0` | Vector radar charts and icon system |
+| **Datastores** | PostgreSQL / H2 | `16` / `2.2.x` | Production ACID store / In-memory dev database |
+| **Container** | Docker / Compose | `24+` / `2.x` | Multi-stage containerized deployment |
+
+---
+
+## Core API Specification
+
+| Method & Path | Authorization | Description |
+| :--- | :---: | :--- |
+| `POST /api/auth/register` | Public | Register new user account (defaults to `JOB_SEEKER`). |
+| `POST /api/auth/login` | Public | Authenticates credentials and returns Access & Refresh tokens. |
+| `POST /api/auth/refresh` | Public | Silent background token renewal hitting timer 10s before expiry. |
+| `POST /api/resume/upload` | **Authenticated** | Uploads candidate resume PDF (multipart form-data). |
+| `POST /api/job/analyze` | **Authenticated** | Submits job description text for Gemini AI skill extraction. |
+| `POST /api/score/evaluate` | **Authenticated** | Triggers asynchronous ATS analysis (`@EnableAsync`) $\to$ returns `{ analysisId }`. |
+| `GET /api/analysis/{id}` | **Authenticated** | Retrieves analysis score breakdown (poll until `COMPLETED`). |
+| `GET /api/dashboard/stats` | **Authenticated** | Retrieves aggregate user analytics and recent ATS evaluations. |
+| `GET /api/admin/users` | `ROLE_ADMIN` | Fleet user list and clearance roles. |
+| `GET /api/admin/stats/overview`| `ROLE_ADMIN` | Platform-wide evaluation metrics, error rates, and user counts. |
+| `GET /actuator/health` | Public | Liveness probe and database connectivity check. |
 
 ---
 
@@ -156,18 +248,30 @@ npm run dev
 # Dashboard active at: http://localhost:5173
 ```
 
+#### Step 3: Production Builds (Optional)
+```bash
+# Backend JAR packaging
+cd backend && ./mvnw clean package -DskipTests
+
+# Frontend optimized build
+cd frontend && npm run build
+```
+
 ---
 
 ## Decoupled Environment Strategy
 
 All services extract hostnames, database connection strings, and AI credentials into decoupled environment templates:
 
-| Service / Layer | Config File | Template Reference | Key Variables |
-| :--- | :--- | :--- | :--- |
-| **Frontend UI** | `frontend/vite.config.ts` | [`frontend/.env.example`](frontend/.env.example) | `VITE_API_BASE_URL` (Defaults to `/api`) |
-| **Backend Core** | `backend/src/main/resources/application.yml` | [`.env.example`](.env.example) | `SPRING_PROFILES_ACTIVE`, `GEMINI_API_KEY`, `JWT_SECRET` |
-| **Production Store**| `application.yml` | [`.env.example`](.env.example) | `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` |
-| **Docker Compose** | `docker-compose.yml` | [`.env.example`](.env.example) | Port allocations and inter-container bridges |
+| Variable | Required | Default (Dev) | Description |
+| :--- | :---: | :--- | :--- |
+| `GEMINI_API_KEY` | **Yes** | *(none)* | Google Gemini API key for contextual skill extraction. |
+| `SPRING_PROFILES_ACTIVE` | No | `dev` | Profile mode: `dev` (H2 DB) or `prod` (PostgreSQL). |
+| `DATABASE_URL` | Prod only | – | PostgreSQL JDBC URL (`jdbc:postgresql://localhost:5432/resumeiq`). |
+| `DATABASE_USERNAME` | Prod only | – | Relational database username. |
+| `DATABASE_PASSWORD` | Prod only | – | Relational database password. |
+| `JWT_SECRET` | Prod only | *(256-bit key)* | HMAC-SHA secret for token signing. |
+| `CORS_ORIGINS` | No | `http://localhost:5173` | Comma-separated allowed CORS origins. |
 
 ---
 
@@ -206,6 +310,19 @@ curl -X POST http://localhost:8080/api/score/evaluate \
 curl -X POST http://localhost:8080/api/resume/upload \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -F "file=@/path/to/resume.pdf"
+```
+
+---
+
+## Platform Troubleshooting Guide
+
+### 1. "Unable to access lob stream" (PostgreSQL)
+If encountered while accessing the dashboard, this occurs when Hibernate attempts to read large text fields outside an active transactional context. Resolved by attaching `@Transactional(readOnly = true)` to controller read methods.
+
+### 2. "mvnw: illegal option -" (Windows CRLF Line Endings)
+Caused by Windows CRLF line terminators on shell scripts. The container Dockerfile handles this automatically via:
+```bash
+sed -i 's/\r$//' mvnw
 ```
 
 ---
